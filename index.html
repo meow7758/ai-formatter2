@@ -3,111 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Morph - 现代代码美化器</title>
+    <title>AI Code Morph - 萌萌代码美化器</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Prism.js 样式 (One Dark 主题) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Fira+Code:wght@400;500&display=swap');
+        
+        :root {
+            --primary-pink: #ffafcc;
+            --primary-blue: #a2d2ff;
+            --soft-white: #fefae0;
+        }
+
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            min-h-screen: 100vh;
+        }
+
         .code-font { font-family: 'Fira Code', monospace; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+
+        .kawaii-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid #ffffff;
+            border-radius: 40px;
+            box-shadow: 0 20px 0 rgba(0,0,0,0.05);
+        }
+
+        .input-area {
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px dashed var(--primary-pink);
+            transition: all 0.3s ease;
+        }
+
+        .input-area:focus-within {
+            background: #ffffff;
+            border-style: solid;
+            transform: scale(1.01);
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .floating-emoji {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        pre[class*="language-"] {
+            margin: 0 !important;
+            background: transparent !important;
+            padding: 0 !important;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
+    <!-- 装饰性小元素 -->
+    <div class="fixed top-10 left-10 text-4xl floating-emoji">✨</div>
+    <div class="fixed bottom-10 right-10 text-4xl floating-emoji" style="animation-delay: 1s;">🌈</div>
+    <div class="fixed top-20 right-20 text-4xl floating-emoji" style="animation-delay: 1.5s;">🐱</div>
+
     <!-- 顶部标题 -->
-    <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">AI Code Morph</h1>
-        <p class="text-slate-500 mt-2 text-sm">基于 DeepSeek 的智能实时代码格式化工具</p>
+    <div class="mb-6 text-center">
+        <h1 class="text-4xl font-extrabold text-white drop-shadow-lg tracking-tight">AI Code Morph 🎀</h1>
+        <p class="text-white/80 mt-2 font-medium">把凌乱的代码变漂亮，就像变魔法一样！</p>
     </div>
 
     <!-- 主卡片容器 -->
-    <div class="w-full max-w-6xl glass-card rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+    <div class="w-full max-w-6xl kawaii-card overflow-hidden flex flex-col md:flex-row min-h-[650px] relative">
         
         <!-- 左侧：输入区 -->
-        <div class="flex-1 p-6 border-r border-slate-100 flex flex-col">
+        <div class="flex-1 p-8 flex flex-col">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">原始代码</span>
-                <span class="px-2 py-1 text-[10px] bg-slate-100 text-slate-500 rounded uppercase font-bold">Input</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📝</span>
+                    <span class="text-sm font-bold text-slate-500 uppercase tracking-widest">代码粘贴处</span>
+                </div>
+                <!-- 模型选择 -->
+                <select id="modelSelect" class="bg-pink-100 text-pink-600 text-xs font-bold py-1 px-3 rounded-full border-none outline-none cursor-pointer hover:bg-pink-200 transition-colors">
+                    <option value="deepseek-chat">DeepSeek-V3 (极速)</option>
+                    <option value="deepseek-reasoner">DeepSeek-R1 (深度演化)</option>
+                </select>
             </div>
-            <textarea id="inputCode" 
-                class="flex-1 w-full p-4 bg-transparent border-none focus:ring-0 resize-none code-font text-sm text-slate-700 outline-none"
-                placeholder="在此粘贴凌乱的代码..."></textarea>
+            
+            <div class="flex-1 rounded-3xl input-area p-4 overflow-hidden flex flex-col">
+                <textarea id="inputCode" 
+                    class="flex-1 w-full bg-transparent border-none focus:ring-0 resize-none code-font text-sm text-slate-700 outline-none no-scrollbar"
+                    placeholder="// 在这里粘贴你的代码... (｡♥‿♥｡)"></textarea>
+            </div>
         </div>
 
         <!-- 右侧：输出区 -->
-        <div class="flex-1 p-6 bg-slate-900 flex flex-col relative">
+        <div class="flex-1 p-8 bg-[#282c34] flex flex-col relative md:rounded-r-[36px]">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">格式化结果</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">✨</span>
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">变美后的代码</span>
+                </div>
                 <div id="statusIndicator" class="hidden flex items-center gap-2">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span class="text-[10px] text-blue-400 font-bold uppercase">AI 正在思考...</span>
+                    <span class="text-[10px] text-pink-400 font-bold animate-bounce">AI 正在施法中... 🪄</span>
                 </div>
             </div>
-            <div id="outputContainer" class="flex-1 overflow-auto">
-                <pre id="outputCode" class="code-font text-sm text-blue-100 whitespace-pre-wrap"></pre>
+            
+            <div id="outputContainer" class="flex-1 overflow-auto no-scrollbar">
+                <!-- 高亮容器 -->
+                <pre class="language-javascript"><code id="outputCode" class="code-font text-sm"></code></pre>
             </div>
             
             <!-- 复制按钮 -->
-            <button id="copyBtn" onclick="copyResult()" class="absolute bottom-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all border border-white/10 backdrop-blur-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Page-8 8H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2m4-2V4a2 2 0 00-2-2H9a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2z" />
+            <button id="copyBtn" onclick="copyResult()" class="absolute bottom-8 right-8 w-12 h-12 bg-pink-400 hover:bg-pink-500 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center hover:scale-110 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                 </svg>
             </button>
         </div>
     </div>
 
     <!-- 底部说明 -->
-    <div class="mt-8 text-slate-400 text-[10px] uppercase tracking-widest font-medium">
-        Powered by DeepSeek & Cloudflare Workers
+    <div class="mt-8 text-white/60 text-[10px] uppercase tracking-[0.3em] font-bold">
+        Made with Love & DeepSeek 🍭
     </div>
+
+    <!-- 引入 Prism.js 核心及常用语言支持 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 
     <script>
         const inputEl = document.getElementById('inputCode');
         const outputEl = document.getElementById('outputCode');
         const statusEl = document.getElementById('statusIndicator');
+        const modelEl = document.getElementById('modelSelect');
         let debounceTimer;
 
-        // 监听输入，实时触发（防抖处理）
         inputEl.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             if (!inputEl.value.trim()) {
-                outputEl.innerText = "";
+                outputEl.textContent = "";
+                Prism.highlightElement(outputEl);
                 return;
             }
-            debounceTimer = setTimeout(formatCode, 1000); // 停止输入1秒后触发
+            debounceTimer = setTimeout(formatCode, 800); 
         });
 
         async function formatCode() {
             const code = inputEl.value;
+            const model = modelEl.value;
             statusEl.classList.remove('hidden');
 
             try {
                 const response = await fetch('/api/format', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
+                    body: JSON.stringify({ code, model })
                 });
 
-                if (!response.ok) throw new Error('网络请求失败');
+                if (!response.ok) throw new Error('魔法失效了...');
                 
                 const data = await response.json();
-                // 移除 AI 自动生成的 Markdown 代码块标记
                 const cleanCode = data.result.replace(/```[a-z]*\n?|```/gi, '').trim();
-                outputEl.innerText = cleanCode;
+                
+                // 设置文本并触发高亮
+                outputEl.textContent = cleanCode;
+                Prism.highlightElement(outputEl);
+                
             } catch (error) {
-                outputEl.innerText = "Error: " + error.message;
+                outputEl.textContent = "Error: " + error.message;
             } finally {
                 statusEl.classList.add('hidden');
             }
         }
 
         function copyResult() {
-            const text = outputEl.innerText;
+            const text = outputEl.textContent;
             if (!text) return;
+            
             const el = document.createElement('textarea');
             el.value = text;
             document.body.appendChild(el);
@@ -117,8 +194,12 @@
             
             const btn = document.getElementById('copyBtn');
             const originalInner = btn.innerHTML;
-            btn.innerHTML = '<span class="text-[10px] font-bold">已复制!</span>';
-            setTimeout(() => btn.innerHTML = originalInner, 2000);
+            btn.innerHTML = '✨';
+            btn.classList.add('bg-green-400');
+            setTimeout(() => {
+                btn.innerHTML = originalInner;
+                btn.classList.remove('bg-green-400');
+            }, 2000);
         }
     </script>
 </body>
